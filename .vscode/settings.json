@@ -59,4 +59,7 @@
     "[vue]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
+    "rust-analyzer.cargo.extraEnv": {
+        "GOOGLE_SSO_CLIENT_ID": "dummy-id"
+    }
 }

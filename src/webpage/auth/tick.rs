@@ -1,7 +1,6 @@
-use super::{Claims, PRIVATE_KEY, verify};
+use super::{SessionResponse, issue_token, verify};
 use crate::error::ServerError;
 use actix_web::{HttpResponse, Responder, post, web};
-use jwt::SignWithKey;
 use serde::Deserialize;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -14,13 +13,11 @@ struct Request {
 pub async fn handler(request: web::Json<Request>) -> Result<impl Responder, ServerError> {
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
-    if verify(&request.token, now) {
-        let claims = Claims {
-            iat: now,
-            exp: now + 3600,
-        };
-        let token = claims.sign_with_key(&*PRIVATE_KEY)?;
-        Ok(HttpResponse::Ok().body(token))
+    if let Some(mut claims) = verify(&request.token, now) {
+        claims.iat = now;
+        claims.exp = now + 3600;
+        let token = issue_token(&claims)?;
+        Ok(HttpResponse::Ok().json(SessionResponse::from_claims(token, &claims)))
     } else {
         Ok(HttpResponse::Forbidden().finish())
     }

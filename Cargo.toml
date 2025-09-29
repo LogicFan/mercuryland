@@ -15,9 +15,7 @@ serde_json = "1.0"
 # cryptography
 rand = "0.8"
 rsa = "0.9"
-sha2 = "0.10"
-hmac = "0.12"
-jwt = "0.16"
+jsonwebtoken = "9.3"
 # database
 rusqlite = { version = "0.32", features = [
     "bundled",
@@ -36,7 +34,7 @@ poise = "0.6.1"
 serenity = "0.12.4"
 # youtube
 google-youtube3 = "6.0"
-reqwest = "0.12"
+reqwest = { version = "0.12", features = ["json"] }
 # logging
 log = "0.4"
 env_logger = { version = "0.11", features = [] }

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import axios from "axios";
+import { BASE_URL } from "@/composables/utils";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_SSO_CLIENT_ID;
 const SCRIPT_ID = "google-identity-services";
@@ -7,10 +9,25 @@ const SCRIPT_ID = "google-identity-services";
 const buttonContainer = ref<HTMLDivElement | null>(null);
 
 interface CredentialResponse {
-    credential: string;
+    credential?: string;
     select_by?: string;
     clientId?: string;
 }
+
+interface SessionResponse {
+    token: string;
+    email?: string;
+    name?: string;
+}
+
+const props = defineProps<{
+    clientIp?: string | null;
+}>();
+
+const emit = defineEmits<{
+    (e: "login-success", payload: SessionResponse): void;
+    (e: "login-error", error: unknown): void;
+}>();
 
 type GoogleAccounts = {
     id: {
@@ -86,9 +103,25 @@ function loadGoogleIdentityServices(): Promise<void> {
     return googleScriptPromise;
 }
 
-function handleCredentialResponse(response: CredentialResponse) {
-    // TODO: avoid logging the credential; wire into secure handling when ready (copilot review).
-    console.log(`Encoded JWT ID token: ${response.credential}`);
+async function handleCredentialResponse(response: CredentialResponse) {
+    if (!response.credential) {
+        emit("login-error", new Error("Missing Google credential"));
+        return;
+    }
+
+    try {
+        const { data } = await axios.post<SessionResponse>(
+            `${BASE_URL}/api/auth/google`,
+            {
+                credential: response.credential,
+                ip: props.clientIp ?? undefined,
+            }
+        );
+        emit("login-success", data);
+    } catch (error) {
+        console.error("Google login failed", error);
+        emit("login-error", error);
+    }
 }
 
 function renderGoogleButton() {
@@ -102,6 +135,7 @@ function renderGoogleButton() {
         console.warn(
             "Missing VITE_GOOGLE_SSO_CLIENT_ID env variable; Google Sign-In is disabled."
         );
+        emit("login-error", new Error("Google Sign-In 未設定客戶端 ID"));
         return;
     }
 
@@ -118,6 +152,7 @@ function renderGoogleButton() {
         shape: "rectangular",
         logo_alignment: "center",
     });
+    window.google.accounts.id.prompt();
 }
 
 onMounted(async () => {
@@ -130,6 +165,7 @@ onMounted(async () => {
         renderGoogleButton();
     } catch (error) {
         console.error(error);
+        emit("login-error", error);
     }
 });
 </script>

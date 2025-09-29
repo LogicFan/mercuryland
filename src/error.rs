@@ -6,7 +6,7 @@ use google_youtube3::yup_oauth2;
 pub enum ServerError {
     SystemTime(std::time::SystemTimeError),
     Io(std::io::Error),
-    Jwt(jwt::Error),
+    JsonWebToken(jsonwebtoken::errors::Error),
     Json(serde_json::Error),
     Rusqlite(rusqlite::Error),
     SeaQuery(sea_query::error::Error),

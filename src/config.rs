@@ -4,8 +4,6 @@ use std::{fs, sync::LazyLock};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub username: String,
-    pub password: String,
     pub wheel_password: String,
     pub discord: DiscordConfig,
     pub youtube_channel_id: String,
